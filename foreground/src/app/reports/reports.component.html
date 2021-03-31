@@ -1,0 +1,22 @@
+<h3>{{title}} </h3>
+
+<div class='container'>
+    <table >
+        <tr *ngFor="let report of reports"> 
+            <table>
+                <tr> 
+                    <td style= "width: 55%">Id: {{report.id}}</td>
+                    <td style= "width: 35%">Type: {{report.payload.reportType}}</td>
+                    <button class= 'btn btn-primary' (click)="onBlock(report.id)" >{{report.state ==="BLOCKED"? "Unblock": "Block" }}</button>
+                </tr>
+                <tr> 
+                    <td style= "width: 55%">State: {{report.state}} </td>
+                    <td style= "width: 35%">Message: {{report.payload.message}}</td>
+                    <button class= 'btn btn-primary' (click)="onResolve(report.id)" >Resolve</button>        
+                </tr>
+            </table>
+        </tr>
+    </table>
+</div>
+
+

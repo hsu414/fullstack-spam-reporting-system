@@ -1,0 +1,6 @@
+{
+    "/reports": {
+      "target": "http://localhost:3800",
+      "secure": false
+    }
+  }
