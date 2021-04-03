@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root'
 })
-export class AppService {
+export class HttpService {
 
   headers = new HttpHeaders().set('Content-Type', 'application/json');
   constructor(private http: HttpClient) { }
@@ -19,6 +19,7 @@ export class AppService {
 
   requestTicketClosed(reportId: string) {
     const updateObject = { 'ticketState': 'CLOSED'};
+    console.log(this.rootURL + '/' + reportId);
     return this.http.put(this.rootURL + '/' + reportId, updateObject, {headers: this.headers});
   }
 
@@ -26,16 +27,4 @@ export class AppService {
     const updateObject = { 'state': state};
     return this.http.patch(this.rootURL + '/' + reportId, updateObject, {headers: this.headers});
   }
-
-  processError(err: any) {
-    let message = '';
-    if (err.error instanceof ErrorEvent) {
-     message = err.error.message;
-    } else {
-     message = `Error Code: ${err.status}\nMessage: ${err.message}`;
-    }
-    console.log(message);
-    return throwError(message);
- }
-
 }

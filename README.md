@@ -17,4 +17,13 @@ The foreground app is an angular project. To run the foreground app, open anothe
 Check out the spam reporting system on your browser http://localhost:4200/
 
 
+# Run foreground test
+` cd foreground`  
+` ng test --code-coverage`
+
+Check out the coverage report under [/foreground/coverage/index.html](foreground\coverage\foreground\index.html)
+
+
+
+
 

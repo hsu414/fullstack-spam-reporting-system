@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 
 import { ReportsComponent } from './reports.component';
-import { AppService } from '../service/app.service';
-import { Observable, of } from 'rxjs';
+import {  HttpService } from '../service/http.service';
+import { Observable, of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 
 describe('ReportsComponent', () => {
@@ -59,50 +59,126 @@ describe('ReportsComponent', () => {
                 'referenceResourceType': 'POST'
             }
         }];
-  const mockAppService = jasmine.createSpyObj('AppService', ['getReports', 'requestTicketClosed', 'requestTicketBlockOrUnblock']);
-
+  const mockHttpService = jasmine.createSpyObj('HttpService', ['getReports', 'requestTicketClosed', 'requestTicketBlockOrUnblock']);
   beforeEach(async () => {
-    mockAppService.getReports.and.returnValue(of(testData));
-    mockAppService.requestTicketClosed.and.returnValue(of(''));
-    mockAppService.requestTicketBlockOrUnblock.and.returnValue(of(''));
-
+    // mock functions
+    mockHttpService.getReports.and.returnValue(of(testData));
+    mockHttpService.requestTicketClosed.and.returnValue(of(''));
+    mockHttpService.requestTicketBlockOrUnblock.and.returnValue(of(''));
+    console.log = () => {};
+    // set up test bed
     await TestBed.configureTestingModule({
       declarations: [ ReportsComponent ],
-      providers: [ { provide: AppService, useValue: mockAppService }]
+      providers: [ { provide: HttpService, useValue: mockHttpService }]
     })
     .compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ReportsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
+
   it('should be created successfully', () => {
     expect(component).toBeTruthy();
+  });
+  it('should render title "Reports"', () => {
+  const compiled = fixture.debugElement.nativeElement;
+  expect(compiled.querySelector('h3').textContent).toEqual('Reports');
   });
   it('should load only the spam reports', () => {
     expect(component.reports.length).toBe(2);
   });
-  it('should block when button is clicked', fakeAsync(() => {
-    spyOn(component, 'onBlock');
-
-    // let button = fixture.debugElement.nativeElement.querySelector('button');
+  it('should update block state and switch text when BLOCK/UNBLOCK button is clicked', async() => {
+    // arrange: spy on the first button and the onBlock function
     const blockBtn = fixture.debugElement.queryAll(By.css('button'))[0];
-    blockBtn.triggerEventHandler('click', null);
-    tick();
-    fixture.whenStable().then(() => {
-      expect(component.onBlock).toHaveBeenCalled();
-    });
-  }));
-  it('should send resolve request when resolve button is clicked', fakeAsync((done: any) => {
-    spyOn(component, 'onResolve');
-    const resolveBtn = fixture.debugElement.queryAll(By.css('button'))[1];
-    resolveBtn.triggerEventHandler('click', null);
+    const onBlockSpy = spyOn(component, 'onBlock').and.callThrough();
 
+    // assert: button text
+    expect(blockBtn.nativeElement.innerText).toEqual('Block');
+
+    // act: click BLOCK button
+    blockBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+
+    // assert: update block state of the first report and switch button text
+    await fixture.whenStable();
+    expect(onBlockSpy).toHaveBeenCalled();
+    expect(mockHttpService.requestTicketBlockOrUnblock).toHaveBeenCalledWith(testData[0].id, 'BLOCKED');
+    expect(blockBtn.nativeElement.innerText).toEqual('Unblock');
+
+    // act: click Unblock button
+    blockBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+
+    // assert: update block state of the first report and switch button text
+    await fixture.whenStable();
+    expect(onBlockSpy).toHaveBeenCalledTimes(2);
+    expect(mockHttpService.requestTicketBlockOrUnblock).toHaveBeenCalledWith(testData[0].id, 'UNBLOCKED');
+    expect(blockBtn.nativeElement.innerText).toEqual('Block');
+  });
+  it('should log error when error occurs in onResolve', async() => {
+    // arrange
+    const blockBtn = fixture.debugElement.queryAll(By.css('button'))[0];
+    const logSpy = spyOn(console, 'log');
+    const err = new Error('err');
+    mockHttpService.requestTicketBlockOrUnblock.and.returnValues(throwError(err), throwError(err));
+
+    // act: click BLOCK button
+    blockBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    blockBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // assert: log error when error occurs
+    expect(logSpy).toHaveBeenCalledWith(err);
+  });
+  it('should send ticket closed request and reload window when RESOLVE button is clicked', () => {
+    // arrange: spy on the resolve button and the onResolve function
+    const resolveBtn = fixture.debugElement.queryAll(By.css('button'))[1];
+    const onResolveSpy = spyOn(component, 'onResolve').and.callThrough();
+    const reloadSpy = spyOn(component, 'reloadPage').and.callFake(() => {});
+
+    // assert: button text
+    expect(resolveBtn.nativeElement.innerText).toEqual('Resolve');
+
+    // act: click RESOLVE button
+    resolveBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+
+    // assert: update the state of the first report and reload
     fixture.whenStable().then(() => {
-      expect(component.onResolve).toHaveBeenCalled();
+      expect(onResolveSpy).toHaveBeenCalled();
+      expect(mockHttpService.requestTicketClosed).toHaveBeenCalledWith(testData[0].id);
+      expect(reloadSpy).toHaveBeenCalled();
     });
-  }));
-});
+  });
+  it('should log error when error occurs in onResolve', async() => {
+    // arrange
+    const blockBtn = fixture.debugElement.queryAll(By.css('button'))[1];
+    const logSpy = spyOn(console, 'log');
+    const err = new Error('err');
+    mockHttpService.requestTicketClosed.and.returnValue(throwError(err));
+
+    // act: click BLOCK button
+    blockBtn.triggerEventHandler('click', null);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // assert: log error when error occurs
+    expect(logSpy).toHaveBeenCalledWith(err);
+  })
+  it('should emit event and unsubscribe when destroyed ', () => {
+    // arrange spy
+    const unsubscribeSpy = spyOn(component.destroy$, 'unsubscribe');
+    const emitDestroySpy = spyOn(component.destroy$, 'next');
+    // act
+    component.OnDestroy();
+    // assert
+    expect(unsubscribeSpy).toHaveBeenCalled();
+    expect(emitDestroySpy).toHaveBeenCalledWith(true);
+  });
+
+})

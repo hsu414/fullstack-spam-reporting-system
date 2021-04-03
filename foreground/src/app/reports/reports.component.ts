@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 
-import { AppService } from '../service/app.service';
+import { HttpService } from '../service/http.service';
 import { takeUntil, take } from 'rxjs/operators';
 import { Subject, pipe } from 'rxjs';
 import { buttonBlockObject } from './reports.interface';
@@ -14,7 +13,7 @@ import { buttonBlockObject } from './reports.interface';
 })
 export class ReportsComponent implements OnInit {
 
-  constructor(private appService: AppService) { }
+  constructor(private httpService: HttpService) { }
 
   title = 'Reports';
   rootURL = '/reports';
@@ -35,7 +34,7 @@ export class ReportsComponent implements OnInit {
 
   getAllReports(): void {
     // Load the reports of SPAM
-     this.appService.getReports().pipe(takeUntil(this.destroy$)).subscribe((res: any) => {
+     this.httpService.getReports().pipe(takeUntil(this.destroy$)).subscribe((res: any) => {
       console.log('reports: ', res);
       for (const element of res) {
         if (element.payload && element.payload.reportType === 'SPAM') {
@@ -49,7 +48,7 @@ export class ReportsComponent implements OnInit {
     const index = this.reports.findIndex((report: any) => report.id === buttonId);
     if (this.reports[index].state === 'BLOCKED') {
       this.reports[index].state = 'UNBLOCKED';
-      this.appService.requestTicketBlockOrUnblock(buttonId, 'UNBLOCKED')
+      this.httpService.requestTicketBlockOrUnblock(buttonId, 'UNBLOCKED')
       .pipe(take(1))
       .subscribe((res) => {
         console.log(res);
@@ -58,7 +57,7 @@ export class ReportsComponent implements OnInit {
       });
     } else {
       this.reports[index].state = 'BLOCKED';
-      this.appService.requestTicketBlockOrUnblock(buttonId, 'BLOCKED')
+      this.httpService.requestTicketBlockOrUnblock(buttonId, 'BLOCKED')
       .pipe(take(1))
       .subscribe((res) => {
         console.log(res);
@@ -69,15 +68,18 @@ export class ReportsComponent implements OnInit {
   }
 
   onResolve(buttonId: string): void {
-    this.appService.requestTicketClosed(buttonId)
+    this.httpService.requestTicketClosed(buttonId)
     .pipe(take(1))
     .subscribe((res) => {
       console.log(res);
-      window.location.reload();
+      this.reloadPage();
     }, (error) => {
       console.log(error);
     }
      );
   }
 
+  reloadPage(): void {
+    window.location.reload();
+  }
 }
