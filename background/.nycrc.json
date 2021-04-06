@@ -1,0 +1,8 @@
+{
+  "exclude": ["**/*.spec.ts"],
+  "extension": [".ts"],
+  "report-dir": "coverage",
+  "reporter": ["lcov"]
+}
+
+

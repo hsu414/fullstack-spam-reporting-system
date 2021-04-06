@@ -1,5 +1,7 @@
-import {Server} from './src/server'
+import Server from './src/server';
 
 const server = new Server();
-server.init();
 
+process.on('SIGTERM', () => {
+    server.listen.close();
+});
