@@ -10,18 +10,22 @@ The background app is runnning on node.js. To run the background server, open th
 
 The foreground app is an angular project. To run the foreground app, open another terminal and run:  
 ` cd foreground`  
-` npm install -g @angular/cli`  
 ` npm install`   
-` ng serve`
+` npm run start`
 
 Check out the spam reporting system on your browser http://localhost:4200/
 
+# Run background test
+` cd background`  
+` npm run test-coverage`
+
+Check out the coverage report under [/background/coverage/lcov-report/index.html](background\coverage\lcov-report\index.html)
 
 # Run foreground test
 ` cd foreground`  
-` ng test --code-coverage`
+` npm run test --code-coverage`
 
-Check out the coverage report under [/foreground/coverage/index.html](foreground\coverage\foreground\index.html)
+Check out the coverage report under [/foreground/coverage/index.html](foreground\coverage\index.html)
 
 
 
