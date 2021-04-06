@@ -12,6 +12,7 @@ describe('AppComponent', () => {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
+    window.onbeforeunload = () => {};
   });
 
   it('should create the app', () => {

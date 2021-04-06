@@ -72,6 +72,7 @@ describe('ReportsComponent', () => {
       providers: [ { provide: HttpService, useValue: mockHttpService }]
     })
     .compileComponents();
+    window.onbeforeunload = () => {};
     fixture = TestBed.createComponent(ReportsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
